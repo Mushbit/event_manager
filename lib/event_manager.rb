@@ -16,11 +16,17 @@ def clean_phone_number(phone_number)
     phone_number[1..10]
   elsif phone_number.length === 10
     phone_number
+  else
+    "Incorrect number!"
   end
 end
 
 def time_target(reg_hours)
   reg_hours.sum / reg_hours.length
+end
+
+def day_target(reg_days)
+  reg_days.tally.sort_by{|key, value| value}.reverse
 end
 
 def legislators_by_zipcode(zipcode)
@@ -62,18 +68,20 @@ template_letter = File.read('form_letter.erb')
 erb_template = ERB.new template_letter
 
 reg_hours = []
+reg_days = []
 
 contents.each do |row|
   id = row[0]
   name = row[:first_name]
   phone_number = clean_phone_number(row[:homephone])
   zipcode = clean_zipcode(row[:zipcode])
-  puts reg_date = Time.strptime(row[:regdate], "%m/%d/%y %k:%M")
+  reg_date = Time.strptime(row[:regdate], "%m/%d/%y %k:%M")
   reg_hours << reg_date.hour
+  reg_days << reg_date.strftime("%A")
   legislators = legislators_by_zipcode(zipcode)
 
   form_letter = erb_template.result(binding)
-  #save_thank_you_letter(id, form_letter)
+  save_thank_you_letter(id, form_letter)
 end
 
-puts "The best time to have our advertisments up is between #{time_target(reg_hours) - 1} and #{time_target(reg_hours) + 1}"
+puts "The best time to have our advertisments up is between #{time_target(reg_hours) - 1} and #{time_target(reg_hours) + 1} on a #{day_target(reg_days)[0][0]} and #{day_target(reg_days)[1][0]}."
